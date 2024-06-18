@@ -1,3 +1,3 @@
-This is a starter project for the [Chris Courses Online Multiplayer Game Tutorial](https://www.youtube.com/watch?v=Wcvqnx14cZA) available on YouTube.
+Rocnikovy projekt, tutorial [Chris Courses Online Multiplayer Game Tutorial](https://www.youtube.com/watch?v=Wcvqnx14cZA) dostupny na Youtube.
 
-To get started, download this repo and double click `index.html` to see the single-player game we'll base our multiplayer-game off of.
+Jedna se multiplayerovou hru s vyuzitim node.js, express, socket.io
