@@ -1,21 +1,29 @@
+// Vybrání canvas elementu a získání 2D kontextu
 const canvas = document.querySelector('canvas')
 const c = canvas.getContext('2d')
 
+// Inicializace socketu
 const socket = io()
 
+// Vybrání elementu pro zobrazení skóre
 const scoreEl = document.querySelector('#scoreEl')
 
+// Získání poměru pixelů zařízení
 const devicePixelRatio = window.devicePixelRatio || 1
 
+// Nastavení šířky a výšky canvasu
 canvas.width = innerWidth * devicePixelRatio
 canvas.height = innerHeight * devicePixelRatio
 
+// Výpočet středu canvasu
 const x = canvas.width / 2
 const y = canvas.height / 2
 
+// Inicializace objektů pro hráče a projektily
 const frontEndPlayers = {}
 const frontEndProjectiles = {}
 
+// Po připojení k socketu inicializace canvasu na serveru
 socket.on('connect', () => {
   socket.emit('initCanvas', {
     width: canvas.width,
@@ -24,10 +32,12 @@ socket.on('connect', () => {
   })
 })
 
+// Aktualizace projektilů na základě dat ze serveru
 socket.on('updateProjectiles', (backEndProjectiles) => {
   for (const id in backEndProjectiles) {
     const backEndProjectile = backEndProjectiles[id]
 
+    // Přidání nového projektilu, pokud neexistuje
     if (!frontEndProjectiles[id]) {
       frontEndProjectiles[id] = new Projectile({
         x: backEndProjectile.x,
@@ -37,11 +47,13 @@ socket.on('updateProjectiles', (backEndProjectiles) => {
         velocity: backEndProjectile.velocity
       })
     } else {
+      // Aktualizace pozice stávajícího projektilu
       frontEndProjectiles[id].x += backEndProjectiles[id].velocity.x
       frontEndProjectiles[id].y += backEndProjectiles[id].velocity.y
     }
   }
 
+  // Odstranění projektilů, které již nejsou na serveru
   for (const frontEndProjectileId in frontEndProjectiles) {
     if (!backEndProjectiles[frontEndProjectileId]) {
       delete frontEndProjectiles[frontEndProjectileId]
@@ -49,10 +61,12 @@ socket.on('updateProjectiles', (backEndProjectiles) => {
   }
 })
 
+// Aktualizace hráčů na základě dat ze serveru
 socket.on('updatePlayers', (backEndPlayers) => {
   for (const id in backEndPlayers) {
     const backEndPlayer = backEndPlayers[id]
 
+    // Přidání nového hráče, pokud neexistuje
     if (!frontEndPlayers[id]) {
       frontEndPlayers[id] = new Player({
         x: backEndPlayer.x,
@@ -62,10 +76,11 @@ socket.on('updatePlayers', (backEndPlayers) => {
       })
     } else {
       if (id === socket.id) {
-        // if a player already exists
+        // Aktualizace pozice vlastního hráče
         frontEndPlayers[id].x = backEndPlayer.x
         frontEndPlayers[id].y = backEndPlayer.y
 
+        // anti lag pro ostatni hrace pri vysoke latenci
         const lastBackendInputIndex = playerInputs.findIndex((input) => {
           return backEndPlayer.sequenceNumber === input.sequenceNumber
         })
@@ -78,8 +93,7 @@ socket.on('updatePlayers', (backEndPlayers) => {
           frontEndPlayers[id].y += input.dy
         })
       } else {
-        // for all other players
-
+        // Aktualizace pozice ostatních hráčů
         gsap.to(frontEndPlayers[id], {
           x: backEndPlayer.x,
           y: backEndPlayer.y,
@@ -90,6 +104,7 @@ socket.on('updatePlayers', (backEndPlayers) => {
     }
   }
 
+  // Odstranění hráčů, kteří již nejsou na serveru
   for (const id in frontEndPlayers) {
     if (!backEndPlayers[id]) {
       delete frontEndPlayers[id]
@@ -97,30 +112,36 @@ socket.on('updatePlayers', (backEndPlayers) => {
   }
 })
 
+// Funkce pro animaci canvasu
 let animationId
 function animate() {
   animationId = requestAnimationFrame(animate)
   c.fillStyle = 'rgba(0, 0, 0, 0.1)'
   c.fillRect(0, 0, canvas.width, canvas.height)
 
+  // Kreslení všech hráčů
   for (const id in frontEndPlayers) {
     const frontEndPlayer = frontEndPlayers[id]
     frontEndPlayer.draw()
   }
 
+  // Kreslení všech projektilů
   for (const id in frontEndProjectiles) {
     const frontEndProjectile = frontEndProjectiles[id]
     frontEndProjectile.draw()
   }
 
+  // // Aktualizace všech projektilů (zakomentováno)
   // for (let i = frontEndProjectiles.length - 1; i >= 0; i--) {
   //   const frontEndProjectile = frontEndProjectiles[i]
   //   frontEndProjectile.update()
   // }
 }
 
+// Spuštění animace
 animate()
 
+// Inicializace kláves
 const keys = {
   w: {
     pressed: false
@@ -136,9 +157,14 @@ const keys = {
   }
 }
 
+// Nastavení rychlosti pohybu hráče
 const SPEED = 10
+// Pole pro ukládání vstupů hráče
 const playerInputs = []
 let sequenceNumber = 0
+
+// Nastavení intervalu pro odesílání vstupů hráče na server
+//sequenceNumber je cislo posledniho odeslaneho vstupu pro synchronnizaci s serverem
 setInterval(() => {
   if (keys.w.pressed) {
     sequenceNumber++
@@ -169,6 +195,7 @@ setInterval(() => {
   }
 }, 15)
 
+// Přidání posluchače událostí pro stisk kláves
 window.addEventListener('keydown', (event) => {
   if (!frontEndPlayers[socket.id]) return
 
@@ -191,6 +218,7 @@ window.addEventListener('keydown', (event) => {
   }
 })
 
+// Přidání posluchače událostí pro uvolnění kláves
 window.addEventListener('keyup', (event) => {
   if (!frontEndPlayers[socket.id]) return
 

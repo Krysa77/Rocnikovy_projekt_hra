@@ -1,3 +1,6 @@
+//neni pouzito v multiplayeru, obsahuje data kosmeticych prvku jako jsou pozice, velikost, rychlost, barva
+
+//treni
 const friction = 0.99
 class Particle {
   constructor(x, y, radius, color, velocity) {

@@ -1,3 +1,4 @@
+//obsahuje udaje o hraci, pozice, velikost, barva
 class Player {
   constructor({x, y, radius, color}) {
     this.x = x
@@ -5,7 +6,7 @@ class Player {
     this.radius = radius
     this.color = color
   }
-
+//vykresleni hrace
   draw() {
     c.beginPath()
     c.arc(

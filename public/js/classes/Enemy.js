@@ -1,3 +1,5 @@
+//neni pouzito v multiplayeru, obsahuje data nepritele jako jsou pozice, velikost, rychlost, barva
+
 class Enemy {
   constructor(x, y, radius, color, velocity) {
     this.x = x
