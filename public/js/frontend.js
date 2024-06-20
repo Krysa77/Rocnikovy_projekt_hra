@@ -24,13 +24,7 @@ const frontEndPlayers = {}
 const frontEndProjectiles = {}
 
 // Po připojení k socketu inicializace canvasu na serveru
-socket.on('connect', () => {
-  socket.emit('initCanvas', {
-    width: canvas.width,
-    height: canvas.height,
-    devicePixelRatio
-  })
-})
+
 
 // Aktualizace projektilů na základě dat ze serveru
 socket.on('updateProjectiles', (backEndProjectiles) => {
@@ -75,11 +69,11 @@ socket.on('updatePlayers', (backEndPlayers) => {
         color: backEndPlayer.color
       })
 
-      document.querySelector('#playerLabels').innerHTML += `<div data-id="${id}" data-score="${backEndPlayer.score}">${id}: ${backEndPlayer.score}</div>`
+      document.querySelector('#playerLabels').innerHTML += `<div data-id="${id}" data-score="${backEndPlayer.score}">${backEndPlayer.username}: ${backEndPlayer.score}</div>`
 
     } else {
 
-      document.querySelector(`div[data-id="${id}"]`).innerHTML = `${id}: ${backEndPlayer.score}`
+      document.querySelector(`div[data-id="${id}"]`).innerHTML = `${backEndPlayer.username}: ${backEndPlayer.score}`
 
       document.querySelector(`div[data-id="${id}"]`).setAttribute('data-score', backEndPlayer.score)
 
@@ -134,6 +128,11 @@ socket.on('updatePlayers', (backEndPlayers) => {
     if (!backEndPlayers[id]) {
       const divToDelete = document.querySelector(`div[data-id="${id}"]`)
       divToDelete.parentNode.removeChild(divToDelete)
+
+      if (id === socket.id) {
+        document.querySelector('#usernameForm').style.display = 'block'
+      }
+
       delete frontEndPlayers[id]
     }
   }
@@ -185,7 +184,7 @@ const keys = {
 }
 
 // Nastavení rychlosti pohybu hráče
-const SPEED = 10
+const SPEED = 5
 // Pole pro ukládání vstupů hráče
 const playerInputs = []
 let sequenceNumber = 0
@@ -266,4 +265,13 @@ window.addEventListener('keyup', (event) => {
       keys.d.pressed = false
       break
   }
+})
+
+document.querySelector('#usernameForm').addEventListener('submit', (event) => {
+  event.preventDefault()
+  document.querySelector('#usernameForm').style.display = 'none'
+  socket.emit('initGame', {    width: canvas.width,
+    height: canvas.height,
+    devicePixelRatio, username: document.querySelector('#usernameInput').value})
+  
 })

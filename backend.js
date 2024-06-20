@@ -22,7 +22,7 @@ app.get('/', (req, res) => {
 const backEndPlayers = {}
 const backEndProjectiles = {}
 
-const SPEED = 10 // Rychlost pohybu hráče
+const SPEED = 5 // Rychlost pohybu hráče
 const RADIUS = 10 // Poloměr hráče
 const PROJECTILE_RADIUS = 5 // Poloměr střely
 let projectileId = 0 // ID pro střely
@@ -31,31 +31,10 @@ let projectileId = 0 // ID pro střely
 io.on('connection', (socket) => {
   console.log('a user connected')
   // Přidání nového hráče s náhodnou pozicí a barvou
-  backEndPlayers[socket.id] = {
-    x: 500 * Math.random(),
-    y: 500 * Math.random(),
-    color: `hsl(${360 * Math.random()}, 100%, 50%)`,
-    sequenceNumber: 0,
-    score: 0
-  }
+  
 
   // Aktualizace všech hráčů
   io.emit('updatePlayers', backEndPlayers)
-
-  // Inicializace plátna
-  socket.on('initCanvas', ({ width, height, devicePixelRatio }) => {
-    backEndPlayers[socket.id].canvas = {
-      width,
-      height
-    }
-    
-    // Nastavení poloměru hráče podle obrazu uzivatelskeho zarizeni
-    backEndPlayers[socket.id].radius = RADIUS
-
-    if (devicePixelRatio > 1) {
-      backEndPlayers[socket.id].radius = 2 * RADIUS
-    }
-  })
 
   // Když hráč vystřelí
   socket.on('shoot', ({ x, y, angle }) => {
@@ -76,6 +55,29 @@ io.on('connection', (socket) => {
     }
 
     console.log(backEndProjectiles)
+  })
+
+  socket.on('initGame', ({username, width, height, devicePixelRatio}) => {
+    backEndPlayers[socket.id] = {
+      x: 500 * Math.random(),
+      y: 500 * Math.random(),
+      color: `hsl(${360 * Math.random()}, 100%, 50%)`,
+      sequenceNumber: 0,
+      score: 0,
+      username: username
+    }
+
+    backEndPlayers[socket.id].canvas = {
+      width,
+      height
+    }
+    
+    // Nastavení poloměru hráče podle obrazu uzivatelskeho zarizeni
+    backEndPlayers[socket.id].radius = RADIUS
+
+    if (devicePixelRatio > 1) {
+      backEndPlayers[socket.id].radius = 2 * RADIUS
+    }
   })
 
   // Když se uživatel odpojí
@@ -146,8 +148,6 @@ setInterval(() => {
       ) {
         if(backEndPlayers[backEndProjectiles[id].playerId])
           backEndPlayers[backEndProjectiles[id].playerId].score++
-        
-        console.log(backEndPlayers[backEndProjectiles[id].playerId].score++)
         delete backEndProjectiles[id]
         delete backEndPlayers[playerId]
         break
