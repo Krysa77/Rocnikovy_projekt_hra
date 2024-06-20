@@ -74,7 +74,32 @@ socket.on('updatePlayers', (backEndPlayers) => {
         radius: 10,
         color: backEndPlayer.color
       })
+
+      document.querySelector('#playerLabels').innerHTML += `<div data-id="${id}" data-score="${backEndPlayer.score}">${id}: ${backEndPlayer.score}</div>`
+
     } else {
+
+      document.querySelector(`div[data-id="${id}"]`).innerHTML = `${id}: ${backEndPlayer.score}`
+
+      document.querySelector(`div[data-id="${id}"]`).setAttribute('data-score', backEndPlayer.score)
+
+      const parentDiv = document.querySelector('#playerLabels')
+      const childDivs = Array.from(parentDiv.querySelectorAll('div'))
+
+      childDivs.sort((a, b) => {
+        const scoreA = Number(a.getAttribute('data-score'))
+        const scoreB = Number(b.getAttribute('data-score'))
+        return scoreB - scoreA
+      })
+
+      childDivs.forEach((div) => {
+        parentDiv.removeChild(div)
+      })
+
+      childDivs.forEach((div) => {
+        parentDiv.appendChild(div)
+      })
+
       if (id === socket.id) {
         // Aktualizace pozice vlastního hráče
         frontEndPlayers[id].x = backEndPlayer.x
@@ -107,6 +132,8 @@ socket.on('updatePlayers', (backEndPlayers) => {
   // Odstranění hráčů, kteří již nejsou na serveru
   for (const id in frontEndPlayers) {
     if (!backEndPlayers[id]) {
+      const divToDelete = document.querySelector(`div[data-id="${id}"]`)
+      divToDelete.parentNode.removeChild(divToDelete)
       delete frontEndPlayers[id]
     }
   }
